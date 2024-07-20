@@ -6,6 +6,8 @@ const nextConfig = {
       dynamic: 30,
     },
   },
+  // required for lucia
+  serverExternalPackages: ["@node-rs/argon2"],
 };
 
 export default nextConfig;
