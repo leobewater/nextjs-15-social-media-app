@@ -1,5 +1,6 @@
 "use client";
 
+import DeletePostDialog from "@/components/posts/editor/DeletePostDialog";
 import InfiniteScrollContainer from "@/components/posts/InfiniteScrollContainer";
 import Post from "@/components/posts/Post";
 import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
