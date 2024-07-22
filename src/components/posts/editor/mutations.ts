@@ -19,7 +19,7 @@ export function useSubmitPostMutation() {
       const queryFilter: QueryFilters = { queryKey: ["post-feed", "for-you"] };
       await queryClient.cancelQueries(queryFilter);
 
-      // modify multiple feeds
+      // modify multiple feeds and cache it right away
       queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
         queryFilter,
         (oldData) => {
