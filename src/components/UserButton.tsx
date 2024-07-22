@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UserAvatar from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
@@ -28,6 +29,9 @@ const UserButton = ({ className }: UserButtonProps) => {
   const { user } = useSession();
 
   const { theme, setTheme } = useTheme();
+
+  // clear cache
+  const queryClient = useQueryClient();
 
   return (
     <DropdownMenu>
@@ -74,7 +78,13 @@ const UserButton = ({ className }: UserButtonProps) => {
           </DropdownMenuPortal>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => logout()}>
+        <DropdownMenuItem
+          onClick={() => {
+            // clear user's query cache before log out
+            queryClient.clear();
+            logout();
+          }}
+        >
           <LogOutIcon className="mr-2 size-4" />
           Logout
         </DropdownMenuItem>
