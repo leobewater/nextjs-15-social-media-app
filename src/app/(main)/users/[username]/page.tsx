@@ -1,5 +1,8 @@
 import { validateRequest } from "@/auth";
+import FollowButton from "@/components/FollowButton";
+import FollowerCount from "@/components/FollowerCount";
 import TrendsSidebar from "@/components/TrendsSidebar";
+import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/UserAvatar";
 import prisma from "@/lib/prisma";
 import { FollowerInfo, getUserDataSelect, UserData } from "@/lib/types";
@@ -102,8 +105,14 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
                 {formatNumber(user._count.posts)}
               </span>
             </span>
+            <FollowerCount userId={user.id} initialState={followerInfo} />
           </div>
         </div>
+        {user.id === loggedInUserId ? (
+          <Button>Edit Profile</Button>
+        ) : (
+          <FollowButton userId={user.id} initialState={followerInfo} />
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ export default function useFollowerInfo(
   userId: string,
   initialState: FollowerInfo,
 ) {
+  // call api to get user's followers info and cache it infinity
   const query = useQuery({
     queryKey: ["follower-info", userId],
     queryFn: () =>
