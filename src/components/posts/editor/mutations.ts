@@ -1,4 +1,4 @@
-import { submitPost } from "@/components/posts/editor/actions";
+import { useSession } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { PostsPage } from "@/lib/types";
 import {
@@ -7,16 +7,30 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { submitPost } from "@/components/posts/editor/actions";
 
 export function useSubmitPostMutation() {
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
 
+  const { user } = useSession();
+
   const mutation = useMutation({
     mutationFn: submitPost,
     onSuccess: async (newPost) => {
-      const queryFilter: QueryFilters = { queryKey: ["post-feed", "for-you"] };
+      // update cache in all the following query keys
+      const queryFilter = {
+        queryKey: ["post-feed"],
+        predicate(query) {
+          return (
+            query.queryKey.includes("for-you") ||
+            (query.queryKey.includes("user-posts") &&
+              query.queryKey.includes(user.id))
+          );
+        },
+      } satisfies QueryFilters;
+
       await queryClient.cancelQueries(queryFilter);
 
       // modify multiple feeds and cache it right away
@@ -25,6 +39,7 @@ export function useSubmitPostMutation() {
         (oldData) => {
           // get the first page and add the newPost to the first position
           const firstPage = oldData?.pages[0];
+
           if (firstPage) {
             return {
               pageParams: oldData.pageParams,
@@ -46,7 +61,7 @@ export function useSubmitPostMutation() {
       queryClient.invalidateQueries({
         queryKey: queryFilter.queryKey,
         predicate(query) {
-          return !query.state.data;
+          return queryFilter.predicate(query) && !query.state.data;
         },
       });
 
