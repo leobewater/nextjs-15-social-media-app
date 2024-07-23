@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import useFollowerInfo from "@/hooks/useFollowerInfo";
 import kyInstance from "@/lib/ky";
 import { FollowerInfo } from "@/lib/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface FollowButtonProps {
   userId: string;
@@ -22,12 +22,42 @@ export default function FollowButton({
 
   const { data } = useFollowerInfo(userId, initialState);
 
+  const queryKey: QueryKey = ["follower-info", userId];
+
   const { mutate } = useMutation({
     // call follow or unfollow api endpoint
     mutationFn: () =>
       data.isFollowedByUser
         ? kyInstance.delete(`/api/users/${userId}/followers`)
         : kyInstance.post(`/api/users/${userId}/followers`),
+    onMutate: async () => {
+      // mutate the cache right before the mutation
+
+      // cancel the running query
+      await queryClient.cancelQueries({ queryKey });
+
+      // snapshot previous state incase of rollback
+      const previousState = queryClient.getQueryData<FollowerInfo>(queryKey);
+
+      // mutate the followers state
+      queryClient.setQueryData<FollowerInfo>(queryKey, () => ({
+        followers:
+          (previousState?.followers || 0) +
+          (previousState?.isFollowedByUser ? -1 : 1),
+        isFollowedByUser: !previousState?.isFollowedByUser,
+      }));
+
+      return { previousState };
+    },
+    onError(error, variables, context) {
+      queryClient.setQueryData(queryKey, context?.previousState);
+      console.error(error);
+
+      toast({
+        variant: "destructive",
+        description: "Something went wrong. Please try again.",
+      });
+    },
   });
 
   return (
